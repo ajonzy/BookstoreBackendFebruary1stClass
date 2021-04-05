@@ -66,6 +66,10 @@ def add_user():
     username = post_data.get("username")
     password = post_data.get("password")
 
+    possible_duplicate = db.session.query(User).filter(User.username == username).first()
+    if possible_duplicate is not None:
+        return jsonify("Error: Username Taken")
+
     record = User(username, password)
 
     db.session.add(record)
