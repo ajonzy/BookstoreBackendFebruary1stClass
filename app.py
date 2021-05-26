@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from flask_heroku import Heroku
 from flask_cors import CORS
 from dotenv import load_dotenv
+from flask_bcrypt import Bcrypt
 import os
 
 load_dotenv()
@@ -15,6 +16,7 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 heroku = Heroku(app)
 CORS(app)
+bcrypt = Bcrypt(app)
 
 
 class User(db.Model):
@@ -70,7 +72,9 @@ def add_user():
     if possible_duplicate is not None:
         return jsonify("Error: Username Taken")
 
-    record = User(username, password)
+    encrypted_password = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    record = User(username, encrypted_password)
 
     db.session.add(record)
     db.session.commit()
@@ -91,7 +95,7 @@ def verify_user():
     if record is None:
         return jsonify("User NOT Verified")
 
-    if record.password != password:
+    if bcrypt.check_password_hash(record.password, password) == False:
         return jsonify("User NOT Verified")
 
     return jsonify("User Verified")
